@@ -25,8 +25,6 @@ int handle_32(unsigned char *file);
 int handle_64(unsigned char *file);
 
 // utils.c
-void print_tab(char **tab);
-void free_tab(char **tab, int index);
 void exec_cmd(char *path, int type);
 
 #endif

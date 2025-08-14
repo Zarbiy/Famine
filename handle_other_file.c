@@ -63,10 +63,10 @@ int handle_other_file(char *name_file) {
         else if (strcmp(ext, ".css") == 0)
             payload = "\n/* Famine version 0.7 (c)oded jul-0000 by bob */\n";
         else
-            payload = "\nFamine version 0.7 (c)oded jul-0000 by bob\n";
+            payload = "\n#Famine version 0.7 (c)oded jul-0000 by bob\n";
     }
     else {
-        payload = "\nFamine version 0.7 (c)oded jul-0000 by bob\n";
+        payload = "\n#Famine version 0.7 (c)oded jul-0000 by bob\n";
     }
 
     write(fd, payload, strlen(payload));

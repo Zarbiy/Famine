@@ -39,7 +39,7 @@ int open_file(char *name_file) {
     return 0;
 }
 
-void enter_folder(char *folder, int *index, char **name_file_exec) {
+void enter_folder(char *folder, int *index) {
     struct dirent *dir;
 
     if (!strcmp(folder, "/home/zarbiy/Documents/Famine"))
@@ -55,19 +55,15 @@ void enter_folder(char *folder, int *index, char **name_file_exec) {
                 snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
                 if (stat(path, &st) == 0) {
                     if (st.st_mode & S_IXUSR) {
+                        // printf("File exec: %s\n", path);
                         if (open_file(path) != -1) {
-                            // printf("File exec: %s\n", path);
-                            name_file_exec[*index] = strdup(path);
-                            *index += 1;
                             if (ACTIVE_SHOW)
                                 exec_cmd(path, 0);
                         }
                     }
                     else {
+                        // printf("File other: %s\n", path);
                         if (handle_other_file(path) != -1) {
-                            // printf("File other: %s\n", path);
-                            name_file_exec[*index] = strdup(path);
-                            *index += 1;
                             if (ACTIVE_SHOW)
                                 exec_cmd(path, 1);
                         }
@@ -77,7 +73,7 @@ void enter_folder(char *folder, int *index, char **name_file_exec) {
             else if (dir->d_type == DT_DIR) {
                 if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
                     snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
-                    enter_folder(path, index, name_file_exec);
+                    enter_folder(path, index);
                 }
             }
         }
@@ -87,10 +83,9 @@ void enter_folder(char *folder, int *index, char **name_file_exec) {
 }
 
 int main() {
-    char *name_folder[] = {"/tmp/test", NULL};
+    char *name_folder[] = {"/tmp/test/", NULL};
 
     int i = 0;
-    char **name_file_exec = calloc(MAX_FILES, sizeof(char *));
     int index = 0;
 
     while (name_folder[i]) {
@@ -98,15 +93,12 @@ int main() {
             i++;
             continue ;
         }
-        enter_folder(name_folder[i], &index, name_file_exec);
+        enter_folder(name_folder[i], &index);
         if (index == MAX_FILES - 1) {
             printf("Limit file reach !\n");
             break;
         }
         i++;
     }
-    
-    // print_tab(name_file_exec);
-    free_tab(name_file_exec, index);
     return 0;
 }
