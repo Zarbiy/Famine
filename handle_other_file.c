@@ -56,10 +56,6 @@ int handle_other_file(char *name_file) {
                 strcmp(ext, ".swift") == 0 || strcmp(ext, ".kt") == 0 || strcmp(ext, ".cs") == 0 ||
                 strcmp(ext, ".php") == 0)
             payload = "\n// Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".py") == 0 || strcmp(ext, ".sh") == 0 || strcmp(ext, ".rb") == 0 || 
-                strcmp(ext, ".pl") == 0 || strcmp(ext, ".r") == 0 || strcmp(ext, ".lua") == 0 || 
-                strcmp(ext, ".tcl") == 0)
-            payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
         else if (strcmp(ext, ".s") == 0 || strcmp(ext, ".asm") == 0 || strcmp(ext, ".nasm") == 0)
             payload = "\n; Famine version 0.7 (c)oded jul-0000 by bob\n";
         else if (strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0 || strcmp(ext, ".md") == 0 || 
@@ -69,8 +65,6 @@ int handle_other_file(char *name_file) {
             payload = "\n/* Famine version 0.7 (c)oded jul-0000 by bob */\n";
         else if (strcmp(ext, ".sql") == 0)
             payload = "\n-- Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".yml") == 0 || strcmp(ext, ".yaml") == 0 || strcmp(ext, ".toml") == 0 || strcmp(ext, ".ini") == 0)
-            payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
         else
             payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
     }

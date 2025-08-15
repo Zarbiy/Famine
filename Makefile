@@ -18,6 +18,7 @@ RM			= rm -f
 DIR_DUP		= mkdir -p $(@D)
 
 NAME_USER = bob
+FOLDER = /home/zarbiy/Documents/test
 
 all: $(NAME)
 
@@ -36,15 +37,15 @@ fclean: clean
 	@$(RM) $(NAME)
 
 file_test:
-	mkdir -p /tmp/test
-	echo "#include <stdio.h>\nint main() {\n\tprintf(\"Bonjour je suis jacob\");\n\treturn 0;\n}" > /tmp/test/prog.c
-	cc /tmp/test/prog.c -o /tmp/test/a1
-	cc -m32 /tmp/test/prog.c -o /tmp/test/a2
-	echo "Bonjour je suis Jacob" > /tmp/test/test.txt
-	mkdir -p /tmp/test/bonjour
-	echo "Bonjour je suis Jean" > /tmp/test/bonjour/test2.txt
-	cc /tmp/test/prog.c -o /tmp/test/bonjour/a3
-	cc -m32 /tmp/test/prog.c -o /tmp/test/bonjour/a4
+	mkdir -p $(FOLDER)
+	echo "#include <stdio.h>\nint main() {\n\tprintf(\"Bonjour je suis jacob\");\n\treturn 0;\n}" > $(FOLDER)/prog.c
+	cc $(FOLDER)/prog.c -o $(FOLDER)/a1
+	cc -m32 $(FOLDER)/prog.c -o $(FOLDER)/a2
+	echo "Bonjour je suis Jacob" > $(FOLDER)/test.txt
+	mkdir -p $(FOLDER)/bonjour
+	echo "Bonjour je suis Jean" > $(FOLDER)/bonjour/test2.txt
+	cc $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a3
+	cc -m32 $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a4
 
 add_user:
 	sudo adduser $(NAME_USER)
@@ -53,3 +54,6 @@ delete_user:
 	sudo deluser --remove-home $(NAME_USER)
 
 re: fclean all
+
+# sudo nano /etc/systemd/system/mon_service.service
+# sudo systemctl enable mon_service.service

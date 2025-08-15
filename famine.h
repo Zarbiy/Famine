@@ -13,7 +13,9 @@
 
 #define MAX_FILES 50
 #define WORD "bob"
-#define ACTIVE_SHOW 0
+#define ACTIVE_SHOW 1
+#define START_FOLDER "/home/zarbiy/Documents/test"
+#define EXEC_FOLDER "/home/zarbiy/Documents/Famine"
 
 //handle_other_file.c
 int handle_other_file(char *name_file);

