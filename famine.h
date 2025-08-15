@@ -13,7 +13,7 @@
 
 #define MAX_FILES 50
 #define WORD "bob"
-#define ACTIVE_SHOW 1
+#define ACTIVE_SHOW 0
 
 //handle_other_file.c
 int handle_other_file(char *name_file);

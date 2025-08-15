@@ -39,7 +39,7 @@ int open_file(char *name_file) {
     return 0;
 }
 
-void enter_folder(char *folder, int *index) {
+void enter_folder(char *folder) {
     struct dirent *dir;
 
     if (!strcmp(folder, "/home/zarbiy/Documents/Famine"))
@@ -73,7 +73,7 @@ void enter_folder(char *folder, int *index) {
             else if (dir->d_type == DT_DIR) {
                 if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
                     snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
-                    enter_folder(path, index);
+                    enter_folder(path);
                 }
             }
         }
@@ -83,21 +83,15 @@ void enter_folder(char *folder, int *index) {
 }
 
 int main() {
-    char *name_folder[] = {"/tmp/test/", NULL};
-
+    char *name_folder[] = {"/tmp/test", NULL};
     int i = 0;
-    int index = 0;
 
     while (name_folder[i]) {
         if (!strcmp(name_folder[i], "/home/zarbiy/Documents/Famine")) {
             i++;
             continue ;
         }
-        enter_folder(name_folder[i], &index);
-        if (index == MAX_FILES - 1) {
-            printf("Limit file reach !\n");
-            break;
-        }
+        enter_folder(name_folder[i]);
         i++;
     }
     return 0;
