@@ -17,6 +17,8 @@ CHFLAGS		= -I include
 RM			= rm -f
 DIR_DUP		= mkdir -p $(@D)
 
+NAME_USER = bob
+
 all: $(NAME)
 
 $(NAME): $(OBJS) 
@@ -43,5 +45,11 @@ file_test:
 	echo "Bonjour je suis Jean" > /tmp/test/bonjour/test2.txt
 	cc /tmp/test/prog.c -o /tmp/test/bonjour/a3
 	cc -m32 /tmp/test/prog.c -o /tmp/test/bonjour/a4
+
+add_user:
+	sudo adduser $(NAME_USER)
+
+delete_user:
+	sudo deluser --remove-home $(NAME_USER)
 
 re: fclean all
