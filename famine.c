@@ -55,14 +55,16 @@ void enter_folder(char *folder) {
                 snprintf(path, sizeof(path), "%s/%s", folder, dir->d_name);
                 if (stat(path, &st) == 0) {
                     if (st.st_mode & S_IXUSR) {
-                        // printf("File exec: %s\n", path);
+                        if (ACTIVE_SHOW)
+                            exec_cmd(path, 0);
                         if (open_file(path) != -1) {
                             if (ACTIVE_SHOW)
                                 exec_cmd(path, 0);
                         }
                     }
                     else {
-                        // printf("File other: %s\n", path);
+                        if (ACTIVE_SHOW)
+                            exec_cmd(path, 1);
                         if (handle_other_file(path) != -1) {
                             if (ACTIVE_SHOW)
                                 exec_cmd(path, 1);

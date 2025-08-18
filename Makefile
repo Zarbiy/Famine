@@ -11,7 +11,7 @@ SRC			= famine.c handle_32.c handle_64.c utils.c handle_other_file.c
 OBJ_DIR		= obj
 OBJS		= $(OBJ_DIR)/famine.o $(OBJ_DIR)/handle_32.o $(OBJ_DIR)/handle_64.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/handle_other_file.o
 CC			= cc
-CFLAGS		= -g3 #-Wall -Wextra -Werror
+CFLAGS		= -g3 -Wall -Wextra -Werror
 CHFLAGS		= -I include
 
 RM			= rm -f
@@ -46,6 +46,7 @@ file_test:
 	echo "Bonjour je suis Jean" > $(FOLDER)/bonjour/test2.txt
 	cc $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a3
 	cc -m32 $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a4
+	cp /usr/bin/ls $(FOLDER)
 
 add_user:
 	sudo adduser $(NAME_USER)

@@ -11,7 +11,6 @@
 #include <dirent.h>
 #include <elf.h>
 
-#define MAX_FILES 50
 #define WORD "bob"
 #define ACTIVE_SHOW 1
 #define START_FOLDER "/home/zarbiy/Documents/test"
