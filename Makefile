@@ -7,9 +7,9 @@ COLOR_BOLD = \033[1m
 MAKEFLAGS += --no-print-directory
 
 NAME		= famine
-SRC			= famine.c handle_32.c handle_64.c utils.c handle_other_file.c
+SRC			= famine.c handle_32.c handle_64.c utils.c handle_other_file.c conditions.c
 OBJ_DIR		= obj
-OBJS		= $(OBJ_DIR)/famine.o $(OBJ_DIR)/handle_32.o $(OBJ_DIR)/handle_64.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/handle_other_file.o
+OBJS		= $(OBJ_DIR)/famine.o $(OBJ_DIR)/handle_32.o $(OBJ_DIR)/handle_64.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/handle_other_file.o $(OBJ_DIR)/conditions.o
 CC			= cc
 CFLAGS		= -g3 -Wall -Wextra -Werror
 CHFLAGS		= -I include

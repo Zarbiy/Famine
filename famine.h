@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <time.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -16,7 +17,11 @@
 #define START_FOLDER "/home/zarbiy/Documents/test"
 #define EXEC_FOLDER "/home/zarbiy/Documents/Famine"
 
-//handle_other_file.c
+// conditions.c
+int check_user(const char *expected_user);
+int check_time();
+
+// handle_other_file.c
 int handle_other_file(char *name_file);
 
 // handle_32.c
