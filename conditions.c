@@ -1,6 +1,8 @@
 #include "famine.h"
 
 int check_user(const char *expected_user) {
+    if (getenv("USER") == NULL)
+        return 0;
     return strcmp(getenv("USER"), expected_user);
 }
 
