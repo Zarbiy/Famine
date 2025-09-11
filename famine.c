@@ -95,5 +95,6 @@ int main() {
         enter_folder(name_folder[i]);
         i++;
     }
+    printf("Done\n");
     return 0;
 }

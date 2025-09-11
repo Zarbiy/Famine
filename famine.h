@@ -13,7 +13,7 @@
 #include <elf.h>
 
 #define WORD "bob"
-#define ACTIVE_SHOW 1
+#define ACTIVE_SHOW 0
 #define START_FOLDER "/home/zarbiy/Documents/test"
 #define EXEC_FOLDER "/home/zarbiy/Documents/Famine"
 
