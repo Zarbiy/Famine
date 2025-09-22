@@ -11,7 +11,7 @@ SRC			= famine.c handle_32.c handle_64.c utils.c handle_other_file.c conditions.
 OBJ_DIR		= obj
 OBJS		= $(OBJ_DIR)/famine.o $(OBJ_DIR)/handle_32.o $(OBJ_DIR)/handle_64.o $(OBJ_DIR)/utils.o $(OBJ_DIR)/handle_other_file.o $(OBJ_DIR)/conditions.o
 CC			= cc
-CFLAGS		= -g3 -Wall -Wextra -Werror
+CFLAGS		= -g3# -Wall -Wextra -Werror
 CHFLAGS		= -I include
 
 RM			= rm -f
@@ -38,7 +38,7 @@ fclean: clean
 
 file_test:
 	mkdir -p $(FOLDER)
-	echo "#include <stdio.h>\nint main() {\n\tprintf(\"Bonjour je suis jacob\");\n\treturn 0;\n}" > $(FOLDER)/prog.c
+	printf '#include <stdio.h>\nint main() {\n\tprintf("Bonjour je suis jacob\\n");\n\treturn 0;\n}\n' > $(FOLDER)/prog.c
 	cc $(FOLDER)/prog.c -o $(FOLDER)/a1
 	cc -m32 $(FOLDER)/prog.c -o $(FOLDER)/a2
 	echo "Bonjour je suis Jacob" > $(FOLDER)/test.txt

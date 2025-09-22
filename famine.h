@@ -17,6 +17,7 @@
 #define START_FOLDER "/home/zarbiy/Documents/test"
 #define EXEC_FOLDER "/home/zarbiy/Documents/Famine"
 
+
 // conditions.c
 int check_user(const char *expected_user);
 int check_time();
@@ -28,7 +29,7 @@ int handle_other_file(char *name_file);
 int handle_32(unsigned char *file);
 
 // handle_64.c
-int handle_64(unsigned char *file);
+int handle_64(unsigned char *file, size_t size_file, int fd);
 
 // utils.c
 void exec_cmd(char *path, int type);
