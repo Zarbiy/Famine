@@ -58,3 +58,5 @@ re: fclean all
 
 # sudo nano /etc/systemd/system/mon_service.service
 # sudo systemctl enable mon_service.service
+
+# set follow-fork-mode child

