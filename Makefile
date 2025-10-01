@@ -18,7 +18,7 @@ RM			= rm -f
 DIR_DUP		= mkdir -p $(@D)
 
 NAME_USER = bob
-FOLDER = /home/zarbiy/Documents/test
+FOLDER = /tmp/test
 
 all: $(NAME)
 
@@ -34,7 +34,7 @@ clean:
 	@$(RM) $(OBJS)
 
 fclean: clean
-	@$(RM) $(NAME)
+	@$(RM) $(NAME) famine.o test.o prog
 
 file_test:
 	mkdir -p $(FOLDER)
@@ -47,6 +47,11 @@ file_test:
 	cc $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a3
 	cc -m32 $(FOLDER)/prog.c -o $(FOLDER)/bonjour/a4
 	cp /usr/bin/ls $(FOLDER)
+
+asm_test:
+	nasm -felf64 famine.asm -o famine.o
+	gcc -c test.c -o test.o
+	gcc test.o famine.o -no-pie -o prog
 
 add_user:
 	sudo adduser $(NAME_USER)
